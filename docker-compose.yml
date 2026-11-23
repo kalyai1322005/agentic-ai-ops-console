@@ -1,0 +1,13 @@
+# Free self-hosted n8n. Run: docker compose up -d  -> http://localhost:5678
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    ports: ["5678:5678"]
+    environment:
+      - N8N_HOST=localhost
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto
+    volumes: [n8n_data:/home/node/.n8n]
+volumes:
+  n8n_data:

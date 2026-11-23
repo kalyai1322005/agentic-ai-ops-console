@@ -1,0 +1,452 @@
+{
+  "name": "WF: HR- Human Resources Talent Management and Policy Control",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "ebc45237-afbc-4019-b566-899e7996134c",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg1",
+              "name": "workflow_name",
+              "value": "WF-HR",
+              "type": "string"
+            },
+            {
+              "id": "cfg2",
+              "name": "mode",
+              "value": "={{ $('Execute Workflow Trigger').item.json.mode ?? 'simulation' }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg3",
+              "name": "request_id",
+              "value": "={{ $('Execute Workflow Trigger').item.json.request_id ?? 'HR_' + $now.toMillis() }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg4",
+              "name": "max_hiring_budget_inr",
+              "value": 5000000,
+              "type": "number"
+            },
+            {
+              "id": "cfg5",
+              "name": "performance_threshold",
+              "value": 70,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "196a46f0-1051-42d9-bdb5-27c76e246011",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        208,
+        0
+      ],
+      "typeVersion": 3.4,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "={{ $('Execute Workflow Trigger').item.json.query ?? $('Execute Workflow Trigger').item.json.task }}",
+        "options": {
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "56360b78-e43c-47f1-8871-7ba1fb741ec5",
+      "name": "HR Orchestrator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        464,
+        0
+      ],
+      "typeVersion": 1.8,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "8969d97a-ae34-49a3-a656-31ec39821efa",
+      "name": "OpenAI Chat Model (HR)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        464,
+        208
+      ],
+      "typeVersion": 1.2,
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "U6TvVOifH6DsjEUV",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "f74636b5-2dfe-4285-a98e-e30e465841cf",
+      "name": "HR Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        640,
+        256
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "out1",
+              "name": "workflow",
+              "value": "WF-HR",
+              "type": "string"
+            },
+            {
+              "id": "out2",
+              "name": "department",
+              "value": "hr",
+              "type": "string"
+            },
+            {
+              "id": "out3",
+              "name": "status",
+              "value": "completed",
+              "type": "string"
+            },
+            {
+              "id": "out4",
+              "name": "decision",
+              "value": "={{ $json.decision ?? $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "out5",
+              "name": "reasoning",
+              "value": "={{ $json.reasoning ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "out6",
+              "name": "risk_level",
+              "value": "={{ $json.risk_level ?? 'low' }}",
+              "type": "string"
+            },
+            {
+              "id": "out7",
+              "name": "actions_required",
+              "value": "={{ $json.actions_required ?? [] }}",
+              "type": "array"
+            },
+            {
+              "id": "out8",
+              "name": "compliance_notes",
+              "value": "={{ $json.compliance_notes ?? 'Standard HR compliance applies' }}",
+              "type": "string"
+            },
+            {
+              "id": "out9",
+              "name": "request_id",
+              "value": "={{ $('Workflow Configuration').item.json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "out10",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "982abbfe",
+              "name": "next_workflow",
+              "value": "COMPLETE",
+              "type": "string"
+            },
+            {
+              "id": "d4e594bc",
+              "name": "confidence_score",
+              "value": "={{ $json.confidence_score || $json.confidence || 85 }}",
+              "type": "number"
+            },
+            {
+              "id": "4bcced6a",
+              "name": "crea_compliance_status",
+              "value": "={{ $json.crea_compliance_status || $json.crea_status || 'PASS' }}",
+              "type": "string"
+            },
+            {
+              "id": "a7a30ea0",
+              "name": "founder_approval_status",
+              "value": "={{ $json.founder_approval_status || $json.founder_decision || 'NOT_REQUIRED' }}",
+              "type": "string"
+            },
+            {
+              "id": "f701b7bb",
+              "name": "memory_log",
+              "value": "={{ 'LOGGED-' + ($json.request_id || 'UNKNOWN') + '-' + new Date().toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c80efbdd-0896-4fa2-80ee-293cf81d5ac8",
+      "name": "Build HR Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        704,
+        0
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/wf10-decision-contract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ request_id: $json.request_id || (\"REQ-\" + Date.now()), workflow_source: \"WF\", risk_level: $json.risk_level || \"medium\", mode: $json.mode || \"simulation\", timestamp: new Date().toISOString(), payload: $json }) }}",
+        "options": {}
+      },
+      "id": "02f8a414-43a6-44e1-a55b-dcbf41006100",
+      "name": "Call WF-10 \u2013 Guardrail Gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        708,
+        0
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "wf10-gate-1",
+              "leftValue": "={{ $json.execution_allowed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "wf10-gate-2",
+              "leftValue": "={{ $json.decision_status }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "42d1b27e-5225-480b-95a2-75330b63ebca",
+      "name": "WF-10 Gate \u2013 Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        0
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "blk-1",
+              "name": "request_id",
+              "value": "={{ $json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "blk-2",
+              "name": "decision_status",
+              "value": "BLOCKED",
+              "type": "string"
+            },
+            {
+              "id": "blk-3",
+              "name": "reason_log",
+              "value": "={{ $json.reason || 'WF-10 Global Guardrail blocked execution' }}",
+              "type": "string"
+            },
+            {
+              "id": "blk-4",
+              "name": "execution_allowed",
+              "value": "=false",
+              "type": "boolean"
+            },
+            {
+              "id": "blk-5",
+              "name": "blocked_by",
+              "value": "WF-10 Global Guardrail",
+              "type": "string"
+            },
+            {
+              "id": "blk-6",
+              "name": "confidence_score",
+              "value": "=0",
+              "type": "number"
+            },
+            {
+              "id": "blk-7",
+              "name": "crea_compliance_status",
+              "value": "BLOCKED",
+              "type": "string"
+            },
+            {
+              "id": "blk-8",
+              "name": "next_workflow",
+              "value": "NONE \u2013 blocked by guardrail",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "bf0110c1-aa70-4d33-9977-64f9ccaca1ff",
+      "name": "BLOCKED \u2013 WF-10 Rejected",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1148,
+        160
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Call WF-10 \u2013 Guardrail Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (HR)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HR Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "Build HR Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF-10 \u2013 Guardrail Gate": {
+      "main": [
+        [
+          {
+            "node": "WF-10 Gate \u2013 Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF-10 Gate \u2013 Approved?": {
+      "main": [
+        [
+          {
+            "node": "HR Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BLOCKED \u2013 WF-10 Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "051f89fa-b515-4acc-af61-b4d6279023a2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2f76907fbed960a398910145b73fdcdcdaeab5424a9d76499bbf1f155042f8f0"
+  },
+  "id": "flYawPgsikdzuAek",
+  "tags": []
+}
